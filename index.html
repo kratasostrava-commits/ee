@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Sdílet polohu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body style="font-family: sans-serif; padding: 30px;">
+<h1>Sdílej svoji polohu</h1>
+<p>Klikni na tlačítko níže a potvrď sdílení polohy.</p>
+
+<button id="shareBtn" style="padding: 12px 20px; font-size: 16px;">
+Sdílet polohu
+</button>
+
+<p id="status" style="margin-top: 20px;"></p>
+
+<script>
+document.getElementById('shareBtn').addEventListener('click', () => {
+const status = document.getElementById('status');
+
+if (!navigator.geolocation) {
+status.textContent = 'Geolokace není podporována.';
+return;
+}
+
+status.textContent = 'Získávám polohu…';
+
+navigator.geolocation.getCurrentPosition(
+pos => {
+const data = {
+lat: pos.coords.latitude,
+lon: pos.coords.longitude,
+accuracy: pos.coords.accuracy,
+time: pos.timestamp
+};
+
+fetch('/api/save-location', {
+method: 'POST',
+headers: {'Content-Type': 'application/json'},
+body: JSON.stringify(data)
+})
+.then(r => {
+if (r.ok) status.textContent = 'Poloha úspěšně odeslána.';
+else status.textContent = 'Chyba na serveru.';
+})
+.catch(() => status.textContent = 'Chyba sítě.');
+},
+err => {
+status.textContent = 'Nepodařilo se získat polohu: ' + err.message;
+},
+{ enableHighAccuracy: true, timeout: 10000 }
+);
+});
+</script>
+</body>
+</html>
